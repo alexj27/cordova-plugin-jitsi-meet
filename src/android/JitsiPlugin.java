@@ -30,7 +30,7 @@ public class JitsiPlugin extends CordovaPlugin{
             String key = args.getString(1);
             this.loadURL(url, key, callbackContext);
             return true;
-        }else if (action.equals("destroy")) {
+        } else if (action.equals("destroy")) {
             this.destroy(callbackContext);
             return true;
         }
@@ -41,24 +41,21 @@ public class JitsiPlugin extends CordovaPlugin{
     private void loadURL(final String url, final String key, final CallbackContext callbackContext){
         Log.e(TAG, "loadURL called" );
 
-
         cordova.getActivity().runOnUiThread(new Runnable() {
             public void run() {
                 view = new JitsiMeetView(cordova.getActivity());
                 setJitsiListener(view, callbackContext);
-                view.setWelcomePageEnabled(false);
+                // view.setWelcomePageEnabled(false);
                 Bundle config = new Bundle();
                 config.putBoolean("startWithAudioMuted", true);
                 config.putBoolean("startWithVideoMuted", true);
                 Bundle urlObject = new Bundle();
                 urlObject.putBundle("config", config);
                 urlObject.putString("url", url);
-                view.loadURLObject(urlObject);
+                // view.loadURLObject(urlObject);
                 cordova.getActivity().setContentView(view);
             }
         });
-
-        
     }
 
     private void setJitsiListener(JitsiMeetView view, final CallbackContext callbackContext){
@@ -70,9 +67,9 @@ public class JitsiPlugin extends CordovaPlugin{
             }
 
             @Override
-            public void onConferenceFailed(Map<String, Object> data) {
-                on("CONFERENCE_FAILED", data);
-                pluginResult = new PluginResult(PluginResult.Status.OK, "CONFERENCE_FAILED");
+            public void onConferenceTerminated(Map<String, Object> data) {
+                on("CONFERENCE_TERMINATED", data);
+                pluginResult = new PluginResult(PluginResult.Status.OK, "CONFERENCE_TERMINATED");
                 pluginResult.setKeepCallback(true);
                 callbackContext.sendPluginResult(pluginResult);
             }
@@ -86,33 +83,9 @@ public class JitsiPlugin extends CordovaPlugin{
             }
 
             @Override
-            public void onConferenceLeft(Map<String, Object> data) {
-                on("CONFERENCE_LEFT", data);
-                pluginResult = new PluginResult(PluginResult.Status.OK, "CONFERENCE_LEFT");
-                pluginResult.setKeepCallback(true);
-                callbackContext.sendPluginResult(pluginResult);
-            }
-
-            @Override
             public void onConferenceWillJoin(Map<String, Object> data) {
                 on("CONFERENCE_WILL_JOIN", data);
                 pluginResult = new PluginResult(PluginResult.Status.OK, "CONFERENCE_WILL_JOIN");
-                pluginResult.setKeepCallback(true);
-                callbackContext.sendPluginResult(pluginResult);
-            }
-
-            @Override
-            public void onConferenceWillLeave(Map<String, Object> data) {
-                on("CONFERENCE_WILL_LEAVE", data);
-                pluginResult = new PluginResult(PluginResult.Status.OK, "CONFERENCE_WILL_LEAVE");
-                pluginResult.setKeepCallback(true);
-                callbackContext.sendPluginResult(pluginResult);
-            }
-
-            @Override
-            public void onLoadConfigError(Map<String, Object> data) {
-                on("LOAD_CONFIG_ERROR", data);
-                pluginResult = new PluginResult(PluginResult.Status.OK, "LOAD_CONFIG_ERROR");
                 pluginResult.setKeepCallback(true);
                 callbackContext.sendPluginResult(pluginResult);
             }
@@ -124,7 +97,7 @@ public class JitsiPlugin extends CordovaPlugin{
             public void run() {
                 view.dispose();
                 view = null;
-                JitsiMeetView.onHostDestroy(cordova.getActivity());
+                // JitsiMeetView.onHostDestroy(cordova.getActivity());
                 cordova.getActivity().setContentView(getView());
                 PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, "DESTROYED");
                 pluginResult.setKeepCallback(true);
@@ -140,7 +113,5 @@ public class JitsiPlugin extends CordovaPlugin{
             return (View)webView;
         }
     }
-
- 
 }
 

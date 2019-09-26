@@ -1,4 +1,4 @@
-¬<?xml version='1.0' encoding='utf-8'?>
+<?xml version='1.0' encoding='utf-8'?>
 <plugin id='cordova-plugin-jitsi' version='0.0.1' xmlns='http://apache.org/cordova/ns/plugins/1.0' xmlns:android='http://schemas.android.com/apk/res/android'>
 	<name>JitsiPlugin</name>
 	<js-module name='JitsiPlugin' src='www/JitsiPlugin.js'>
@@ -22,8 +22,10 @@
 			<uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
 			<uses-permission android:name="android.permission.WAKE_LOCK" />
 			<uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+			<activity android:label="JitsiCordovaView" android:name="com.cordova.plugin.jitsi.JitsiCordovaView"></activity>
 		</config-file>
 		<source-file src='src/android/JitsiPlugin.java' target-dir='src/com/cordova/plugin/jitsi/' />
+		<source-file src='src/android/JitsiCordovaView.java' target-dir='src/com/cordova/plugin/jitsi/' />
 		<framework src='src/android/jitsiplugin.gradle' custom='true' type='gradleReference' />
 	</platform>
 
