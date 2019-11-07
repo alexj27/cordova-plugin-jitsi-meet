@@ -1,117 +1,76 @@
 package com.cordova.plugin.jitsi;
 
-import org.apache.cordova.CordovaPlugin;
-import org.apache.cordova.CallbackContext;
-import org.apache.cordova.PluginResult;
+import android.content.Context;
+import android.content.Intent;
+import android.os.Bundle;
+import android.util.Log;
 
+import org.apache.cordova.CallbackContext;
+import org.apache.cordova.CordovaPlugin;
+import org.apache.cordova.PluginResult;
+import org.jitsi.meet.sdk.JitsiMeetView;
 import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
-import android.util.Log;
-import java.util.Map;
 
-import android.os.Bundle;
-
-import org.jitsi.meet.sdk.JitsiMeetView;
-import org.jitsi.meet.sdk.JitsiMeetViewListener;
-
-import android.view.View;
-import org.apache.cordova.CordovaWebView;
+import static android.content.Intent.FLAG_ACTIVITY_SINGLE_TOP;
 
 
-public class JitsiPlugin extends CordovaPlugin{
+public class JitsiPlugin extends CordovaPlugin {
     private JitsiMeetView view;
     private static final String TAG = "cordova-plugin-jitsi";
 
     @Override
     public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
+        JitsiCordovaView.setCallbackContext(callbackContext);
+
         if (action.equals("loadURL")) {
-            String url = args.getString(0);
-            String key = args.getString(1);
-            this.loadURL(url, key, callbackContext);
+            String host = args.getString(0);
+            String room = args.getString(1);
+            String jwt = args.getString(2);
+            this.openNewJitsiActivity(host, room, jwt);
             return true;
         } else if (action.equals("destroy")) {
-            this.destroy(callbackContext);
+            finishJitsiActivity();
+            return true;
+        } else if (action.equals("saveSettings")) {
+            String json = args.getString(0);
+            JitsiStorage storage = new JitsiStorage(cordova.getActivity().getApplicationContext());
+            PluginResult pluginResult;
+
+            if (storage.dumpSettings(json)) {
+                pluginResult = new PluginResult(PluginResult.Status.OK, "SAVED");
+            } else {
+                pluginResult = new PluginResult(PluginResult.Status.ERROR, "FAILED");
+            };
+
+            pluginResult.setKeepCallback(true);
+            JitsiCordovaView.callbackContext.sendPluginResult(pluginResult);
             return true;
         }
         return false;
     }
 
-
-    private void loadURL(final String url, final String key, final CallbackContext callbackContext){
-        Log.e(TAG, "loadURL called" );
-
+    private void openNewJitsiActivity(String host, final String room, String jwt) {
         cordova.getActivity().runOnUiThread(new Runnable() {
+            @Override
             public void run() {
-                view = new JitsiMeetView(cordova.getActivity());
-                setJitsiListener(view, callbackContext);
-                // view.setWelcomePageEnabled(false);
-                Bundle config = new Bundle();
-                config.putBoolean("startWithAudioMuted", true);
-                config.putBoolean("startWithVideoMuted", true);
-                Bundle urlObject = new Bundle();
-                urlObject.putBundle("config", config);
-                urlObject.putString("url", url);
-                // view.loadURLObject(urlObject);
-                cordova.getActivity().setContentView(view);
+                Context context = cordova.getActivity().getApplicationContext();
+                Intent intent = new Intent(context, JitsiCordovaView.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                intent.putExtra("room", room);
+                intent.putExtra("host", host);
+                intent.putExtra("jwt", jwt);
+                cordova.getActivity().startActivity(intent);
             }
         });
     }
 
-    private void setJitsiListener(JitsiMeetView view, final CallbackContext callbackContext){
-        
-        view.setListener(new JitsiMeetViewListener() {
-            PluginResult pluginResult;
-            private void on(String name, Map<String, Object> data) {
-                Log.d("ReactNative", JitsiMeetViewListener.class.getSimpleName() + " " + name + " " + data);
-            }
-
-            @Override
-            public void onConferenceTerminated(Map<String, Object> data) {
-                on("CONFERENCE_TERMINATED", data);
-                pluginResult = new PluginResult(PluginResult.Status.OK, "CONFERENCE_TERMINATED");
-                pluginResult.setKeepCallback(true);
-                callbackContext.sendPluginResult(pluginResult);
-            }
-
-            @Override
-            public void onConferenceJoined(Map<String, Object> data) {
-                on("CONFERENCE_JOINED", data);
-                pluginResult = new PluginResult(PluginResult.Status.OK, "CONFERENCE_JOINED");
-                pluginResult.setKeepCallback(true);
-                callbackContext.sendPluginResult(pluginResult);
-            }
-
-            @Override
-            public void onConferenceWillJoin(Map<String, Object> data) {
-                on("CONFERENCE_WILL_JOIN", data);
-                pluginResult = new PluginResult(PluginResult.Status.OK, "CONFERENCE_WILL_JOIN");
-                pluginResult.setKeepCallback(true);
-                callbackContext.sendPluginResult(pluginResult);
-            }
-        });
-    }
-
-    private void destroy(final CallbackContext callbackContext) {
-        cordova.getActivity().runOnUiThread(new Runnable() {
-            public void run() {
-                view.dispose();
-                view = null;
-                // JitsiMeetView.onHostDestroy(cordova.getActivity());
-                cordova.getActivity().setContentView(getView());
-                PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, "DESTROYED");
-                pluginResult.setKeepCallback(true);
-                callbackContext.sendPluginResult(pluginResult);
-            }
-        });
-    }
-
-    private View getView() {
-        try {
-            return (View)webView.getClass().getMethod("getView").invoke(webView);
-        } catch (Exception e) {
-            return (View)webView;
-        }
+    private void finishJitsiActivity() {
+        Context context = cordova.getActivity().getApplicationContext();
+        Intent intent = new Intent(context, JitsiCordovaView.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        intent.putExtra("action", "close");
+        cordova.getActivity().startActivity(intent);
     }
 }
 

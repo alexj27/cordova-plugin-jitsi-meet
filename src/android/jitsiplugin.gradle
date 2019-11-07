@@ -34,7 +34,7 @@ android {
     	}
 }
 dependencies {
-	implementation ('org.jitsi.react:jitsi-meet-sdk:2.+') { transitive = true }
+	implementation ('org.jitsi.react:jitsi-meet-sdk:2.1.0') { transitive = true }
 
 	implementation "com.android.support:appcompat-v7:27.0.2"
 	implementation "com.android.support:recyclerview-v7:27.0.2"
